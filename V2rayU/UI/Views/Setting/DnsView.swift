@@ -98,7 +98,7 @@ struct DnsView: View {
                 HStack() {
                     Text(String(localized: .DnsProxyStrategy))
                         .frame(width: labelWidth, alignment: .leading)
-                    dnsStrategyPicker(selection: $settings.dnsProxyStrategy)
+                    dnsStrategyPicker(selection: $settings.dnsProxyStrategy, allowForceIPv4: true)
                 }
 
                 Text(String(localized: .DnsBasicSettingsTip))
@@ -199,13 +199,16 @@ struct DnsView: View {
         .padding()
     }
 
-    private func dnsStrategyPicker(selection: Binding<String>) -> some View {
+    private func dnsStrategyPicker(selection: Binding<String>, allowForceIPv4: Bool = false) -> some View {
         Picker("", selection: selection) {
             Text("Default").tag("Default")
             Text("AsIs").tag("AsIs")
             Text("UseIP").tag("UseIP")
             Text("UseIPv4").tag("UseIPv4")
             Text("UseIPv6").tag("UseIPv6")
+            if allowForceIPv4 {
+                Text("ForceIPv4").tag("ForceIPv4")
+            }
         }
         .focusable(false)
     }

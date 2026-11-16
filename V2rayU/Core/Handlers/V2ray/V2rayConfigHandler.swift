@@ -183,13 +183,19 @@ func saveDnsBasicSettings(direct: String, remote: String, bootstrap: String, dir
 }
 
 func normalizeDnsTargetStrategy(_ strategy: String) -> String {
-    let allowed = ["Default", "AsIs", "UseIP", "UseIPv4", "UseIPv6"]
+    let allowed = ["Default", "AsIs", "UseIP", "UseIPv4", "UseIPv6", "ForceIPv4"]
     return allowed.contains(strategy) ? strategy : defaultDnsTargetStrategy
 }
 
 func getFreedomDomainStrategySetting() -> String {
     let strategy = normalizeDnsTargetStrategy(getDnsDirectStrategySetting())
     return strategy == "Default" ? "AsIs" : strategy
+}
+
+func getProxyTargetStrategySetting() -> String? {
+    let strategy = normalizeDnsTargetStrategy(getDnsProxyStrategySetting())
+    // Preserve the Xray default by omitting the key unless explicitly selected.
+    return strategy == "Default" ? nil : strategy
 }
 
 func getLatencyTestURLString() -> String {
@@ -368,6 +374,7 @@ class V2rayConfigHandler {
         // outbounds
         var outbounds: [V2rayOutbound] = []
         outbounds.append(contentsOf: _outbounds)
+        self.applyProxyTargetStrategy(to: outbounds)
         if !self.forPing {
             // outbound Freedom
             let outboundFreedom = V2rayOutbound()
@@ -401,6 +408,20 @@ class V2rayConfigHandler {
             self.applyTunChainOptions()
         }
         // ------------------------------------- routing end ----------------------------------------------
+    }
+
+    /// Apply the saved proxy destination resolution strategy to proxy outbounds.
+    /// Direct, DNS, blackhole and WireGuard outbounds have separate semantics.
+    private func applyProxyTargetStrategy(to outbounds: [V2rayOutbound]) {
+        guard let strategy = getProxyTargetStrategySetting() else { return }
+        for outbound in outbounds {
+            switch outbound.protocol {
+            case .freedom, .blackhole, .dns, .wireguard:
+                continue
+            default:
+                outbound.targetStrategy = strategy
+            }
+        }
     }
 
     /// TUN 模式下 xray 位于 sing-box TUN 之后，TUN 交给 socks 的目标只有 IP。针对这条链路：
@@ -619,6 +640,7 @@ class V2rayConfigHandler {
 
         outbounds.append(outboundFreedom)
         outbounds.append(outboundBlackhole)
+        self.applyProxyTargetStrategy(to: outbounds)
 
         self.v2ray.inbounds = inbounds
         self.v2ray.outbounds = outbounds

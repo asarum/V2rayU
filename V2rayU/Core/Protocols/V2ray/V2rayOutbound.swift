@@ -31,13 +31,14 @@ final class V2rayOutbound: Codable {
     var sendThrough: String?
     var `protocol`: V2rayProtocolOutbound = .freedom
     var tag: String?
+    var targetStrategy: String?
     var streamSettings: V2rayStreamSettings?
     var proxySettings: ProxySettings?
     var mux: V2rayOutboundMux?
     var settings: V2rayOutboundSettings?
 
     enum CodingKeys: String, CodingKey {
-        case sendThrough, `protocol`, tag, streamSettings, proxySettings, mux, settings
+        case sendThrough, `protocol`, tag, targetStrategy, streamSettings, proxySettings, mux, settings
     }
     
     // 空 init 初始化器
@@ -50,6 +51,7 @@ final class V2rayOutbound: Codable {
         sendThrough = try? container.decode(String.self, forKey: .sendThrough)
         `protocol` = try container.decode(V2rayProtocolOutbound.self, forKey: .`protocol`)
         tag = try? container.decode(String.self, forKey: .tag)
+        targetStrategy = try? container.decode(String.self, forKey: .targetStrategy)
         streamSettings = try? container.decode(V2rayStreamSettings.self, forKey: .streamSettings)
         proxySettings = try? container.decode(ProxySettings.self, forKey: .proxySettings)
         mux = try? container.decode(V2rayOutboundMux.self, forKey: .mux)
@@ -78,6 +80,7 @@ final class V2rayOutbound: Codable {
         try container.encodeIfPresent(sendThrough, forKey: .sendThrough)
         try container.encode(`protocol`, forKey: .`protocol`)
         try container.encodeIfPresent(tag, forKey: .tag)
+        try container.encodeIfPresent(targetStrategy, forKey: .targetStrategy)
         try container.encodeIfPresent(streamSettings, forKey: .streamSettings)
         try container.encodeIfPresent(proxySettings, forKey: .proxySettings)
         try container.encodeIfPresent(mux, forKey: .mux)

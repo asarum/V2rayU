@@ -1,0 +1,81 @@
+name: Build patched V2rayU (macOS arm64)
+
+on:
+  push:
+    branches:
+      - 'fix/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v2rayu-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 120
+    steps:
+      - name: Check out patched source
+        uses: actions/checkout@v4
+
+      - name: Check runner and Xcode
+        run: |
+          uname -m
+          xcodebuild -version
+          git log -1 --oneline
+
+      - name: Verify ForceIPv4 source changes are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'var targetStrategy: String?' V2rayU/Core/Protocols/V2ray/V2rayOutbound.swift
+          grep -q 'applyProxyTargetStrategy' V2rayU/Core/Handlers/V2ray/V2rayConfigHandler.swift
+          grep -q 'ForceIPv4' V2rayU/UI/Views/Setting/DnsView.swift
+
+      - name: Resolve Swift package dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -resolvePackageDependencies \
+            -project V2rayU.xcodeproj \
+            -scheme V2rayU \
+            -scmProvider system
+
+      - name: Build unsigned V2rayU for Apple Silicon
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project V2rayU.xcodeproj \
+            -scheme V2rayU \
+            -configuration Debug \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath "$RUNNER_TEMP/V2rayU-DerivedData" \
+            -scmProvider system \
+            -jobs 2 \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package build artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/V2rayU-DerivedData/Build/Products/Debug/V2rayU.app"
+          test -f "$APP/Contents/MacOS/V2rayU"
+          echo 'Built executable:'
+          file "$APP/Contents/MacOS/V2rayU"
+          lipo -archs "$APP/Contents/MacOS/V2rayU" | grep -qw arm64
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$APP" "$RUNNER_TEMP/V2rayU-ForceIPv4-macOS-arm64-unsigned.zip"
+
+      - name: Upload unsigned app
+        uses: actions/upload-artifact@v4
+        with:
+          name: V2rayU-ForceIPv4-macOS-arm64-unsigned
+          path: ${{ runner.temp }}/V2rayU-ForceIPv4-macOS-arm64-unsigned.zip
+          if-no-files-found: error
+          retention-days: 14
