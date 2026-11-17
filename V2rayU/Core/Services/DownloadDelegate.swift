@@ -59,6 +59,7 @@ final class DownloadDelegate: NSObject, URLSessionDelegate, URLSessionDownloadDe
         DispatchQueue.main.async { [weak self, weak task] in
             guard let self = self else { return }
             guard !self.isFinished else { return }
+            let timeoutMessage = String(localized: .DownloadTimeoutProxy)
             self.timer?.invalidate()
             self.timer = Timer.scheduledTimer(withTimeInterval: self.timeoutSeconds, repeats: false) { [weak self, weak task] _ in
                 guard let self = self else { return }
@@ -66,7 +67,7 @@ final class DownloadDelegate: NSObject, URLSessionDelegate, URLSessionDownloadDe
                 self.didTimeout = true
                 self.isFinished = true
                 task?.cancel()
-                self.onError(String(localized: .DownloadTimeoutProxy))
+                self.onError(timeoutMessage)
             }
         }
     }
