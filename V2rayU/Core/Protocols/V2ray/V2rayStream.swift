@@ -63,7 +63,7 @@ enum V2rayHeaderType: String, Codable, CaseIterable, Identifiable {
     case `wechat-video`
     case dtls
     case wireguard
-    case dns
+    case `dns`
     var id: Self { self }
 }
 
