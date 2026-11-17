@@ -106,7 +106,7 @@ enum ProfileValidator {
         guard let failure = firstFailure(in: profiles) else { return true }
         logger.error("start aborted: profile \(failure.profile.remark) invalid: \(String(describing: failure.problem))")
         let (title, message) = await MainActor.run {
-            (String(localized: .StartFailed), message(for: failure))
+            (String(localized: .StartFailed), Self.message(for: failure))
         }
         await showAlert(title: title, message: message)
         return false

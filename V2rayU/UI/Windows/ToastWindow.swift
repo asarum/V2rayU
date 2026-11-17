@@ -53,7 +53,7 @@ func presentOpenPanel(_ panel: NSOpenPanel, attachedTo window: NSWindow? = nil) 
 func alertDialog(title: String, message: String, blocking: Bool = false) {
     if blocking {
         // 同步阻塞模式：用于安装/初始化等关键流程，调用者等待用户确认
-        let work = {
+        let work: @MainActor @Sendable () -> Void = {
             let alert = NSAlert()
             alert.messageText = title
             alert.informativeText = message
@@ -65,9 +65,11 @@ func alertDialog(title: String, message: String, blocking: Bool = false) {
             alert.runModal()
         }
         if Thread.isMainThread {
-            work()
+            MainActor.assumeIsolated { work() }
         } else {
-            DispatchQueue.main.sync(execute: work)
+            DispatchQueue.main.sync {
+                MainActor.assumeIsolated { work() }
+            }
         }
         return
     }
