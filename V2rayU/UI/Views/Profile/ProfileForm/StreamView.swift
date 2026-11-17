@@ -30,7 +30,7 @@ struct ConfigStreamView: View {
                 Group {
                     if item.network == .tcp  {
                         if item.network == .tcp {
-                            getPickerWithLabel(label: .HeaderType, selection: $item.headerType, ignore: [.srtp, .utp, .`wechat-video`, .dtls, .wireguard, .dns])
+                            getPickerWithLabel(label: .HeaderType, selection: $item.headerType, ignore: [.srtp, .utp, .wechatVideo, .dtls, .wireguard, .dns])
                         }
                         if item.headerType == .http {
                             getTextFieldWithLabel(label: .HttpHost, text: $item.host)

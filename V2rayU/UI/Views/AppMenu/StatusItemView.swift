@@ -11,6 +11,7 @@ import AppKit
 // 这两个视图在整个运行期常驻且每秒随速度刷新，常驻的 NSHostingView 是 AttributeGraph 崩溃的高发点，
 // 改为由 AppMenuManager 主动调用 update() 刷新。
 
+@MainActor
 private func makeLabel(size: CGFloat) -> NSTextField {
     let label = NSTextField(labelWithString: "")
     label.font = .monospacedDigitSystemFont(ofSize: size, weight: .regular)
